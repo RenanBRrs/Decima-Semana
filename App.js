@@ -34,7 +34,6 @@ app.get('/list-produto', validarToken, async (req, res) => {
       return res.json({
         error: false,
         produtos,
-        idUsuario: req.userId,
       });
     })
     .catch((err) => {
@@ -45,7 +44,7 @@ app.get('/list-produto', validarToken, async (req, res) => {
     });
 });
 
-app.get('/view-produto/:id', async (req, res) => {
+app.get('/view-produto/:id', validarToken, async (req, res) => {
   const { id } = req.params;
   await Produto.findByPk(id)
     .then((produto) => {
@@ -62,7 +61,7 @@ app.get('/view-produto/:id', async (req, res) => {
     });
 });
 
-app.post('/cad-produto', async (req, res) => {
+app.post('/cad-produto', validarToken, async (req, res) => {
   await Produto.create(req.body)
     .then(() => {
       return res.json({
@@ -78,7 +77,7 @@ app.post('/cad-produto', async (req, res) => {
     });
 });
 
-app.put('/edit-produto/', async (req, res) => {
+app.put('/edit-produto/', validarToken, async (req, res) => {
   const { id } = req.body;
   await Produto.update(req.body, {
     where: {
@@ -99,7 +98,7 @@ app.put('/edit-produto/', async (req, res) => {
     });
 });
 
-app.delete('/delete/:id', async (req, res) => {
+app.delete('/delete/:id', validarToken, async (req, res) => {
   const { id } = req.params;
   await Produto.destroy({
     where: {
@@ -121,7 +120,7 @@ app.delete('/delete/:id', async (req, res) => {
 });
 
 // USUARIOS
-app.delete('/delete-user/:id', async (req, res) => {
+app.delete('/delete-user/:id', validarToken, async (req, res) => {
   const { id } = req.params;
   await Usuario.destroy({
     where: {
@@ -141,7 +140,7 @@ app.delete('/delete-user/:id', async (req, res) => {
       });
     });
 });
-app.post('/cad-user', async (req, res) => {
+app.post('/cad-user', validarToken, async (req, res) => {
   var dados = req.body;
 
   dados.password = await bcrypt.hash(dados.password, 10);
@@ -161,7 +160,7 @@ app.post('/cad-user', async (req, res) => {
       });
     });
 });
-app.put('/edit-user/', async (req, res) => {
+app.put('/edit-user/', validarToken, async (req, res) => {
   const { id } = req.body;
   const dados = req.body;
   //Encrypt password
@@ -184,7 +183,7 @@ app.put('/edit-user/', async (req, res) => {
       });
     });
 });
-app.get('/list-users', async (req, res) => {
+app.get('/list-users', validarToken, async (req, res) => {
   await Usuario.findAll({
     attributes: ['id', 'nome', 'email'],
     order: [['id', 'DESC']],
@@ -202,7 +201,7 @@ app.get('/list-users', async (req, res) => {
       });
     });
 });
-app.get('/view-users/:id', async (req, res) => {
+app.get('/view-users/:id', validarToken, async (req, res) => {
   const { id } = req.params;
   await Usuario.findByPk(id)
     .then((usuario) => {
@@ -248,6 +247,12 @@ app.post('/login', async (req, res) => {
 
 async function validarToken(req, res, next) {
   const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(400).json({
+      error: true,
+      mensagem: 'Error: Login required!!!',
+    });
+  }
   const [, token] = authHeader.split(' ');
 
   if (!token) {
@@ -266,7 +271,7 @@ async function validarToken(req, res, next) {
   } catch (err) {
     return res.status(400).json({
       error: true,
-      mensagem: 'Error: Invalid Token!!!',
+      mensagem: 'Error: Login required!!!',
     });
   }
 }
